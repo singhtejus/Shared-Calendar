@@ -206,6 +206,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Expanded README with setup, environment, migration, deployment, and product concept docs.
 - Made Prisma script commands use the explicit `prisma/schema.prisma` path for Vercel compatibility.
 - Fixed event share-link server action to return `void` so it can be used directly as a Next.js form action.
+- Added the initial Prisma migration and updated the build script to run `prisma migrate deploy` before generating Prisma and building Next.js.
 
 ## Changed files so far
 - `.env.example`
@@ -245,6 +246,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `next-env.d.ts`
 - `next.config.mjs`
 - `package.json`
+- `prisma/migrations/20260606223000_init/migration.sql`
+- `prisma/migrations/migration_lock.toml`
 - `prisma/schema.prisma`
 - `tsconfig.json`
 
@@ -254,8 +257,9 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `which node` and `which npm` confirmed Node.js/npm are not available in the current shell.
 - Vercel build log indicated the deployed build used an older package state (`shared-calendar@0.1.0`) and did not include `prisma/schema.prisma`.
 - Vercel type check reported `createEventShareLinkAction` returned `{ url: string }`; updated it to return `void`.
+- Vercel runtime log reported `public.Timeline` did not exist; added an initial migration so production can create the database tables.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
-- Run `npm install`, `npm run prisma:generate`, `npm run prisma:migrate`, `npm run lint`, and `npm run build`.
+- Run `npm install`, `npm run prisma:generate`, `npm run prisma:migrate`, `npm run lint`, and `npm run build` locally when Node.js/npm are available.
 - Configure `DATABASE_URL` and `NEXT_PUBLIC_APP_URL` locally and in Vercel before production use.
