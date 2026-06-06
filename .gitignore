@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+dist
+build
+.env
+.env*.local
+!.env.example
+*.log
+coverage
+.vercel
+prisma/dev.db

@@ -1,36 +1,36 @@
 {
-  "name": "shared-calendar",
+  "name": "timeshare",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate --schema=prisma/schema.prisma && next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=prisma/schema.prisma"
   },
   "dependencies": {
-    "@prisma/client": "latest",
-    "bcryptjs": "latest",
-    "clsx": "latest",
-    "date-fns": "latest",
-    "ics": "latest",
-    "lucide-react": "latest",
-    "next": "latest",
-    "prisma": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "zod": "latest"
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^2.4.3",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "ics": "^3.8.1",
+    "lucide-react": "^0.468.0",
+    "next": "^15.0.4",
+    "prisma": "^5.22.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/bcryptjs": "latest",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "eslint-config-next": "latest",
-    "typescript": "latest"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.0.4",
+    "typescript": "^5.7.2"
   }
 }

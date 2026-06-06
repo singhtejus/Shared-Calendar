@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TimelineRole {
+  OWNER
+  MEMBER
+}
+
+enum AvailabilityStatus {
+  FREE
+  BUSY
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  name               String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  memberships        TimelineMember[]
+  createdTimelines   Timeline[]          @relation("TimelineCreator")
+  createdEvents      Event[]             @relation("EventCreator")
+  createdShareLinks  EventShareLink[]    @relation("ShareLinkCreator")
+  eventSubscriptions EventSubscription[]
+}
+
+model Timeline {
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String              @unique
+  passwordHash       String
+  createdById        String
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  createdBy          User                @relation("TimelineCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  members            TimelineMember[]
+  availabilityBlocks AvailabilityBlock[]
+  events             Event[]
+}
+
+model TimelineMember {
+  id                  String              @id @default(cuid())
+  timelineId          String
+  userId              String
+  role                TimelineRole        @default(MEMBER)
+  displayName         String
+  freeColor           String
+  busyColor           String
+  timelineFeedEnabled Boolean             @default(false)
+  timelineFeedToken   String?             @unique
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  timeline            Timeline            @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availabilityBlocks  AvailabilityBlock[]
+
+  @@unique([timelineId, userId])
+}
+
+model AvailabilityBlock {
+  id         String             @id @default(cuid())
+  timelineId String
+  memberId   String
+  status     AvailabilityStatus
+  startAt    DateTime
+  endAt      DateTime
+  note       String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  timeline   Timeline           @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  member     TimelineMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id            String              @id @default(cuid())
+  timelineId    String
+  createdById   String
+  title         String
+  description   String?
+  location      String?
+  startAt       DateTime
+  endAt         DateTime
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  timeline      Timeline            @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  createdBy     User                @relation("EventCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  subscriptions EventSubscription[]
+  shareLinks    EventShareLink[]
+}
+
+model EventSubscription {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String
+  createdAt DateTime @default(now())
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
+
+model EventShareLink {
+  id          String   @id @default(cuid())
+  eventId     String
+  token       String   @unique
+  expiresAt   DateTime
+  createdById String
+  createdAt   DateTime @default(now())
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation("ShareLinkCreator", fields: [createdById], references: [id], onDelete: Cascade)
+}

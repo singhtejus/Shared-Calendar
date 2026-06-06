@@ -1,10 +1,10 @@
-# Shared Calendar Build Specification
+# Timeshare Build Specification
 
 ## Source of truth
 This file is the required source of truth for all agents. Before editing code, read this file, identify the current incomplete step, inspect the existing repository, avoid repeating completed work, then update this file after implementation.
 
 ## Product definition
-Shared Calendar is a Vercel-deployed web app for group calendars. A `Timeline` is one shared calendar instance for a friend group or similar group. Users have global accounts identified by email and can belong to multiple timelines. A user creates a timeline with a shared timeline password. Other users join that timeline by entering their email, display name, timeline id or slug, and the shared password.
+Timeshare is a Vercel-deployed web app for group calendars. A `Timeline` is one shared calendar instance for a friend group or similar group. Users have global accounts identified by email and can belong to multiple timelines. A user creates a timeline with a shared timeline password. Other users join that timeline by entering their email, display name, timeline id or slug, and the shared password.
 
 Inside a timeline, each member can mark large free or busy ranges. Every member has two timeline-specific colors: a green shade for free ranges and a red shade for busy ranges. Timeline events are visible to all members. The event creator is subscribed by default. Other members can subscribe by opening the event. Users may optionally enable a personal timeline ICS feed. When enabled, that feed contains only timeline events the user subscribed to. When disabled, the old feed URL must stop working.
 
@@ -186,7 +186,7 @@ Document purpose, stack, setup, env vars, Prisma migration, Vercel deployment, t
 Email sending, OAuth login, Google Calendar API writes, Apple Calendar API writes, drag-select interactions, recurring events, reminders, timeline deletion, password reset, email verification, conflict detection, automatic scheduling suggestions.
 
 ## Current incomplete step
-Step 1: Build the initial Vercel-ready Next.js scaffold described above.
+Step 11: Validate dependency install, Prisma generation/schema validation, and Next.js build in an environment with Node.js and npm available.
 
 ## Completed items
 - Read `AGENTS.md`.
@@ -194,14 +194,66 @@ Step 1: Build the initial Vercel-ready Next.js scaffold described above.
 - Created initial `package.json`.
 - Created initial `tsconfig.json`.
 - Expanded `PLAN.md` into this build specification.
+- Renamed project-facing wording to Timeshare.
+- Verified repository state before implementation.
+- Added base Next.js, ESLint, gitignore, env, and TypeScript config files.
+- Added Prisma schema with users, timelines, memberships, availability blocks, events, subscriptions, and share links.
+- Added Prisma client helper, auth/session helpers, validators, member colors, date formatting, ICS generation, and calendar links.
+- Added server actions for auth, timeline create/join, availability, events/subscriptions/share links, and feed settings.
+- Added App Router pages for home, create, join, timeline dashboard, event detail, and share redirects.
+- Added API routes for one-event ICS downloads and personal ICS feeds.
+- Added responsive global CSS and reusable app components.
+- Expanded README with setup, environment, migration, deployment, and product concept docs.
+- Made Prisma script commands use the explicit `prisma/schema.prisma` path for Vercel compatibility.
 
 ## Changed files so far
-- `package.json`
-- `tsconfig.json`
+- `.env.example`
+- `.eslintrc.json`
+- `.gitignore`
+- `README.md`
 - `PLAN.md`
+- `app/actions/auth.ts`
+- `app/actions/availability.ts`
+- `app/actions/events.ts`
+- `app/actions/settings.ts`
+- `app/actions/timelines.ts`
+- `app/api/event/[eventId]/ics/route.ts`
+- `app/api/feed/[token]/route.ts`
+- `app/create/page.tsx`
+- `app/globals.css`
+- `app/join/page.tsx`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/share/[token]/page.tsx`
+- `app/t/[timelineId]/event/[eventId]/page.tsx`
+- `app/t/[timelineId]/page.tsx`
+- `components/AppHeader.tsx`
+- `components/AvailabilityForm.tsx`
+- `components/CalendarGrid.tsx`
+- `components/EventCard.tsx`
+- `components/EventForm.tsx`
+- `components/FeedSettings.tsx`
+- `components/TimelineForms.tsx`
+- `lib/auth.ts`
+- `lib/colors.ts`
+- `lib/dates.ts`
+- `lib/ics.ts`
+- `lib/links.ts`
+- `lib/prisma.ts`
+- `lib/validators.ts`
+- `next-env.d.ts`
+- `next.config.mjs`
+- `package.json`
+- `prisma/schema.prisma`
+- `tsconfig.json`
 
 ## Tests run
-Not run yet. The project is being scaffolded through GitHub file writes.
+- `git diff --check` passed.
+- `npm install` could not run because `npm` is not installed in the current shell.
+- `which node` and `which npm` confirmed Node.js/npm are not available in the current shell.
+- Vercel build log indicated the deployed build used an older package state (`shared-calendar@0.1.0`) and did not include `prisma/schema.prisma`.
 
 ## Remaining issues
-Application source files are not yet complete. The project requires database environment variables, Prisma migration, and Vercel env configuration before production use.
+- Install Node.js/npm or use an environment where they are available.
+- Run `npm install`, `npm run prisma:generate`, `npm run prisma:migrate`, `npm run lint`, and `npm run build`.
+- Configure `DATABASE_URL` and `NEXT_PUBLIC_APP_URL` locally and in Vercel before production use.
