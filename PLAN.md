@@ -207,6 +207,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Made Prisma script commands use the explicit `prisma/schema.prisma` path for Vercel compatibility.
 - Fixed event share-link server action to return `void` so it can be used directly as a Next.js form action.
 - Added the initial Prisma migration and updated the build script to run `prisma migrate deploy` before generating Prisma and building Next.js.
+- Simplified the public home page to a plain Timeshare intro and redirected logged-in users to their latest timeline.
+- Replaced the form-first timeline dashboard with a calendar-first workspace: month grid, selected-day hourly view, drag/click range selection, and range-based free/busy or event creation.
 
 ## Changed files so far
 - `.env.example`
@@ -235,6 +237,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `components/EventCard.tsx`
 - `components/EventForm.tsx`
 - `components/FeedSettings.tsx`
+- `components/TimelineCalendar.tsx`
 - `components/TimelineForms.tsx`
 - `lib/auth.ts`
 - `lib/colors.ts`
@@ -258,6 +261,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Vercel build log indicated the deployed build used an older package state (`shared-calendar@0.1.0`) and did not include `prisma/schema.prisma`.
 - Vercel type check reported `createEventShareLinkAction` returned `{ url: string }`; updated it to return `void`.
 - Vercel runtime log reported `public.Timeline` did not exist; added an initial migration so production can create the database tables.
+- `git diff --check` passed after the calendar UI changes.
+- `which npm` still reports `npm not found` in this shell, so local lint/build could not be run here.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.

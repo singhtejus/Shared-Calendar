@@ -1,7 +1,5 @@
-import { AvailabilityForm } from "@/components/AvailabilityForm";
-import { CalendarGrid } from "@/components/CalendarGrid";
-import { EventForm } from "@/components/EventForm";
 import { FeedSettings } from "@/components/FeedSettings";
+import { TimelineCalendar } from "@/components/TimelineCalendar";
 import { requireTimelineMember } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -37,8 +35,9 @@ export default async function TimelinePage({ params }: TimelinePageProps) {
         <div>
           <p className="eyebrow">Timeline</p>
           <h1>{timeline.name}</h1>
-          <p>Share id: <code>{timeline.id}</code></p>
-          <p>Slug: <code>{timeline.slug}</code></p>
+          <p>
+            Share id: <code>{timeline.id}</code> Slug: <code>{timeline.slug}</code>
+          </p>
         </div>
         <div className="member-legend">
           {timeline.members.map((member) => (
@@ -51,29 +50,37 @@ export default async function TimelinePage({ params }: TimelinePageProps) {
         </div>
       </section>
 
-      <section className="two-column">
-        <div>
-          <h2>Add availability</h2>
-          <AvailabilityForm timelineId={timeline.id} />
-        </div>
-        <div>
-          <h2>Create event</h2>
-          <EventForm timelineId={timeline.id} />
-        </div>
-      </section>
+      <TimelineCalendar
+        timelineId={timeline.id}
+        availabilityBlocks={timeline.availabilityBlocks.map((block) => ({
+          id: block.id,
+          status: block.status,
+          startAt: block.startAt.toISOString(),
+          endAt: block.endAt.toISOString(),
+          note: block.note,
+          member: {
+            id: block.member.id,
+            displayName: block.member.displayName,
+            freeColor: block.member.freeColor,
+            busyColor: block.member.busyColor
+          }
+        }))}
+        events={timeline.events.map((event) => ({
+          id: event.id,
+          timelineId: event.timelineId,
+          title: event.title,
+          location: event.location,
+          startAt: event.startAt.toISOString(),
+          endAt: event.endAt.toISOString(),
+          subscriptions: event.subscriptions.map((subscription) => ({ id: subscription.id }))
+        }))}
+      />
 
       <FeedSettings
         timelineId={timeline.id}
         enabled={membership.timelineFeedEnabled}
         token={membership.timelineFeedToken}
       />
-
-      <section>
-        <div className="section-heading">
-          <h2>Timeline</h2>
-        </div>
-        <CalendarGrid availabilityBlocks={timeline.availabilityBlocks} events={timeline.events} />
-      </section>
     </div>
   );
 }
