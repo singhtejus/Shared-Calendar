@@ -4,7 +4,6 @@ import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 
 import { requireTimelineMember } from "@/lib/auth";
-import { getAppUrl } from "@/lib/links";
 import { prisma } from "@/lib/prisma";
 import { eventSchema, formEntries } from "@/lib/validators";
 
@@ -103,8 +102,4 @@ export async function createEventShareLinkAction(eventId: string) {
   });
 
   revalidatePath(`/t/${event.timelineId}/event/${eventId}`);
-
-  return {
-    url: `${getAppUrl()}/share/${token}`
-  };
 }

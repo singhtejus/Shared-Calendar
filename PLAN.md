@@ -205,6 +205,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Added responsive global CSS and reusable app components.
 - Expanded README with setup, environment, migration, deployment, and product concept docs.
 - Made Prisma script commands use the explicit `prisma/schema.prisma` path for Vercel compatibility.
+- Fixed event share-link server action to return `void` so it can be used directly as a Next.js form action.
 
 ## Changed files so far
 - `.env.example`
@@ -252,6 +253,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `npm install` could not run because `npm` is not installed in the current shell.
 - `which node` and `which npm` confirmed Node.js/npm are not available in the current shell.
 - Vercel build log indicated the deployed build used an older package state (`shared-calendar@0.1.0`) and did not include `prisma/schema.prisma`.
+- Vercel type check reported `createEventShareLinkAction` returned `{ url: string }`; updated it to return `void`.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
