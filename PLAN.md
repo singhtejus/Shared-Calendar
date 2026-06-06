@@ -1,47 +1,207 @@
-# Shared Calendar Implementation Plan
+# Shared Calendar Build Specification
 
 ## Source of truth
-This file tracks implementation status per `AGENTS.md`.
+This file is the required source of truth for all agents. Before editing code, read this file, identify the current incomplete step, inspect the existing repository, avoid repeating completed work, then update this file after implementation.
+
+## Product definition
+Shared Calendar is a Vercel-deployed web app for group calendars. A `Timeline` is one shared calendar instance for a friend group or similar group. Users have global accounts identified by email and can belong to multiple timelines. A user creates a timeline with a shared timeline password. Other users join that timeline by entering their email, display name, timeline id or slug, and the shared password.
+
+Inside a timeline, each member can mark large free or busy ranges. Every member has two timeline-specific colors: a green shade for free ranges and a red shade for busy ranges. Timeline events are visible to all members. The event creator is subscribed by default. Other members can subscribe by opening the event. Users may optionally enable a personal timeline ICS feed. When enabled, that feed contains only timeline events the user subscribed to. When disabled, the old feed URL must stop working.
+
+Events also support temporary share links. A share link should not expose event details directly. It should send unauthenticated users to the join page with a redirect back to the event after successful login/join.
+
+## Stack
+- Next.js App Router
+- TypeScript
+- Prisma
+- PostgreSQL
+- bcryptjs for timeline password hashing
+- zod for validation
+- date-fns for display formatting
+- ics package or deterministic manual ICS generation
+- Vercel deployment
+
+## Required files
+Create or update these files unless an equivalent structure is documented here afterward:
+
+- `package.json`
+- `tsconfig.json`
+- `next.config.mjs`
+- `.eslintrc.json`
+- `.gitignore`
+- `.env.example`
+- `README.md`
+- `prisma/schema.prisma`
+- `app/layout.tsx`
+- `app/page.tsx`
+- `app/globals.css`
+- `app/create/page.tsx`
+- `app/join/page.tsx`
+- `app/t/[timelineId]/page.tsx`
+- `app/t/[timelineId]/event/[eventId]/page.tsx`
+- `app/share/[token]/page.tsx`
+- `app/api/feed/[token]/route.ts`
+- `app/api/event/[eventId]/ics/route.ts`
+- `app/actions/auth.ts`
+- `app/actions/timelines.ts`
+- `app/actions/availability.ts`
+- `app/actions/events.ts`
+- `app/actions/settings.ts`
+- `components/AppHeader.tsx`
+- `components/CalendarGrid.tsx`
+- `components/EventCard.tsx`
+- `components/TimelineForms.tsx`
+- `components/AvailabilityForm.tsx`
+- `components/EventForm.tsx`
+- `components/FeedSettings.tsx`
+- `lib/prisma.ts`
+- `lib/auth.ts`
+- `lib/colors.ts`
+- `lib/dates.ts`
+- `lib/ics.ts`
+- `lib/links.ts`
+- `lib/validators.ts`
+
+## Prisma schema
+Implement these enums and models.
+
+### Enums
+`TimelineRole`: OWNER, MEMBER.
+`AvailabilityStatus`: FREE, BUSY.
+
+### User
+Fields: id String cuid primary key; email String unique lowercase; name optional String; createdAt default now; updatedAt updatedAt. Relations: memberships, createdTimelines, createdEvents, eventSubscriptions.
+
+### Timeline
+Fields: id String cuid primary key; name String; slug String unique; passwordHash String; createdById String; createdAt default now; updatedAt updatedAt. Relations: createdBy User; members; availabilityBlocks; events.
+
+### TimelineMember
+Fields: id String cuid primary key; timelineId String; userId String; role TimelineRole default MEMBER; displayName String; freeColor String; busyColor String; timelineFeedEnabled Boolean default false; timelineFeedToken optional String unique; createdAt default now; updatedAt updatedAt. Constraints: unique timelineId plus userId. Relations: timeline, user, availabilityBlocks.
+
+### AvailabilityBlock
+Fields: id String cuid primary key; timelineId String; memberId String; status AvailabilityStatus; startAt DateTime; endAt DateTime; note optional String; createdAt default now; updatedAt updatedAt. Server validation must require endAt after startAt. Overlap is allowed in the first scaffold.
+
+### Event
+Fields: id String cuid primary key; timelineId String; createdById String; title String; description optional String; location optional String; startAt DateTime; endAt DateTime; createdAt default now; updatedAt updatedAt. Server validation must require endAt after startAt. Creator must be auto-subscribed in the same mutation.
+
+### EventSubscription
+Fields: id String cuid primary key; eventId String; userId String; createdAt default now. Constraint: unique eventId plus userId.
+
+### EventShareLink
+Fields: id String cuid primary key; eventId String; token String unique; expiresAt DateTime; createdById String; createdAt default now. Default expiration is 7 days.
+
+## Auth and session behavior
+Initial auth is app-managed. User identity is email-only. On create or join, normalize email by trimming and lowercasing. Create the user if missing. Store a session cookie with the current user id. Cookie should be httpOnly, sameSite lax, path `/`, secure in production, and expire after 30 days.
+
+Implement `lib/auth.ts` helpers:
+- `getCurrentUser()` returns user or null.
+- `requireCurrentUser()` returns user or redirects to `/join`.
+- `setUserSession(userId)` writes the session cookie.
+- `clearUserSession()` removes it.
+- `requireTimelineMember(timelineId)` verifies the current user is a member.
+- `requireTimelineOwner(timelineId)` verifies OWNER role.
+
+## Authorization rules
+Only timeline members can view timeline pages, create availability blocks, create timeline events, subscribe to timeline events, or generate event share links. Only event creators can edit/delete events in the initial scaffold. Share links do not grant direct event access; they only preserve the intended redirect.
+
+## Routes
+`/`: Home page explaining timelines, free/busy ranges, shared events, and links to create or join.
+
+`/create`: Form with email, optional display name, timeline name, shared password. Server action creates user, timeline, owner membership, colors, session, then redirects to `/t/[timelineId]`.
+
+`/join`: Form with email, optional display name, timeline id or slug, shared password, optional safe redirect. Server action verifies shared password, creates membership if needed, sets session, redirects to requested safe path or timeline dashboard.
+
+`/t/[timelineId]`: Protected timeline dashboard. Show timeline name, member legend, availability form, event form, calendar/list view, and feed settings.
+
+`/t/[timelineId]/event/[eventId]`: Protected event detail. Show event details, subscription status, subscribe/unsubscribe action, share-link action, event ICS download, Google Calendar link, and back link.
+
+`/share/[token]`: Share redirect. Invalid token shows invalid message. Expired token shows expired message. If logged-in member, redirect to event detail. Otherwise redirect to `/join` with timeline prefilled and redirect preserved.
+
+`/api/event/[eventId]/ics`: Return one-event ICS file.
+
+`/api/feed/[token]`: Return ICS feed for the TimelineMember whose feed token matches and whose feed is enabled. Include only EventSubscriptions for that user where event.timelineId matches the member timeline.
+
+## Server actions
+`auth.ts`: `logoutAction()`.
+
+`timelines.ts`: `createTimelineAction(formData)`, `joinTimelineAction(formData)`. Use zod validation, bcrypt password hashing/checking, color assignment, session cookie, and redirects.
+
+`availability.ts`: `createAvailabilityAction(timelineId, formData)`, optional `deleteAvailabilityAction(blockId)`. Require membership, validate fields, revalidate timeline path.
+
+`events.ts`: `createEventAction(timelineId, formData)`, `subscribeToEventAction(eventId)`, `unsubscribeFromEventAction(eventId)`, `createEventShareLinkAction(eventId)`. Require membership. Event creation must auto-subscribe creator.
+
+`settings.ts`: `setTimelineFeedEnabledAction(timelineId, enabled)`. Require membership. Enabling creates a random URL-safe feed token if absent. Disabling clears the token and sets enabled false.
+
+## Validation
+Implement in `lib/validators.ts`: email, create timeline, join timeline, availability, event schemas. Enforce: valid email; password min 6; timeline name 1-80; event title 1-120; description max 2000; location max 200; note max 160; start and end parse as valid dates; end after start.
+
+## Color assignment
+Implement `colorsForMemberIndex(index)` in `lib/colors.ts`. Use at least 12 green hex colors and 12 red hex colors. Pick by `index % palette.length`, where index is the count of existing timeline members before creating the new one.
+
+## ICS and calendar links
+Implement `lib/ics.ts` to generate ICS for one or many events. Stable UID format: event id plus app domain suffix. Include title, description, location, start, end, created timestamp. Use UTC. Implement `lib/links.ts` to create Google Calendar add links with UTC date ranges.
+
+## UI requirements
+Use clean responsive CSS. The initial calendar can be a grouped list/grid rather than drag-select. It must support large ranges through start/end inputs. `CalendarGrid` groups availability and events by date, shows member names, status, colors, event links, and empty states. `FeedSettings` explains that the personal feed contains subscribed events only.
+
+## Environment
+`.env.example` must include `DATABASE_URL` and `NEXT_PUBLIC_APP_URL`. The app URL is used for absolute share/feed links.
+
+## README
+Document purpose, stack, setup, env vars, Prisma migration, Vercel deployment, timeline concept, free/busy blocks, events, subscriptions, optional feed, and share links.
+
+## Implementation order
+1. Verify repository state and read this file.
+2. Add base config files.
+3. Add Prisma schema.
+4. Add libraries.
+5. Add layout, CSS, header, home page.
+6. Add create/join pages and actions.
+7. Add dashboard, forms, availability, events.
+8. Add event detail, subscriptions, share links.
+9. Add ICS routes and feed settings.
+10. Add README.
+11. Update this file with completed items, changed files, tests run, and remaining issues.
+
+## Acceptance criteria
+- `npm install` succeeds.
+- Prisma schema validates.
+- Build succeeds after env vars and Prisma generation are configured.
+- User can create a timeline.
+- User can join a timeline.
+- Members can view dashboard.
+- Members can create free/busy blocks.
+- Blocks render with member colors.
+- Members can create events.
+- Event creator is auto-subscribed.
+- Members can subscribe/unsubscribe.
+- Event detail has ICS and Google Calendar links.
+- Members can create temporary share links.
+- Share links route through login/join when needed.
+- Optional feed can be enabled.
+- Feed contains only subscribed events for that member and timeline.
+- Disabling feed invalidates the old URL.
+
+## Out of scope for initial scaffold
+Email sending, OAuth login, Google Calendar API writes, Apple Calendar API writes, drag-select interactions, recurring events, reminders, timeline deletion, password reset, email verification, conflict detection, automatic scheduling suggestions.
 
 ## Current incomplete step
-Step 1: Build the initial Vercel-ready Next.js scaffold for Option B: global user identity plus timeline memberships.
-
-## Target architecture
-- Next.js App Router application deployed on Vercel.
-- PostgreSQL database accessed through Prisma.
-- Global users identified by email.
-- Timelines protected by a shared password hash.
-- Users join timelines as members after providing the shared password.
-- Each membership receives deterministic free and busy colors.
-- Availability blocks store large free/busy date ranges.
-- Timeline events are visible to every member.
-- Event subscriptions connect users to events and expose ICS calendar data.
-- Temporary event share links redirect through login and then show the event.
-
-## Planned scaffold
-- Project config: `package.json`, `tsconfig.json`, `next.config.mjs`, `.eslintrc.json`, `.gitignore`, `.env.example`.
-- Styling: `app/globals.css`.
-- Pages: home, login/join, create timeline, timeline dashboard, event share redirect.
-- Server actions: authentication, timeline creation/join, availability creation, event creation, subscription creation.
-- Database: Prisma schema for User, Timeline, TimelineMember, AvailabilityBlock, Event, EventSubscription, EventShareLink.
-- Calendar export: ICS route for event subscribers and Google Calendar link helpers.
-- Utilities: Prisma client, password hashing, session cookies, color assignment, date helpers.
+Step 1: Build the initial Vercel-ready Next.js scaffold described above.
 
 ## Completed items
 - Read `AGENTS.md`.
-- Confirmed `PLAN.md` exists and was empty.
+- Confirmed `PLAN.md` existed and was initially empty.
 - Created initial `package.json`.
 - Created initial `tsconfig.json`.
+- Expanded `PLAN.md` into this build specification.
 
-## Changed files
+## Changed files so far
 - `package.json`
 - `tsconfig.json`
 - `PLAN.md`
 
 ## Tests run
-- Not run yet. Repository is being scaffolded through GitHub file writes.
+Not run yet. The project is being scaffolded through GitHub file writes.
 
 ## Remaining issues
-- Requires `DATABASE_URL` in Vercel.
-- Requires running `npx prisma migrate dev` locally or applying equivalent migration before production use.
-- Email sending is not implemented in the initial scaffold; event subscription exports ICS/Google Calendar links.
+Application source files are not yet complete. The project requires database environment variables, Prisma migration, and Vercel env configuration before production use.
