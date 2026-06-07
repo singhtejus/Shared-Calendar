@@ -209,6 +209,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Added the initial Prisma migration and updated the build script to run `prisma migrate deploy` before generating Prisma and building Next.js.
 - Simplified the public home page to a plain Timeshare intro and redirected logged-in users to their latest timeline.
 - Replaced the form-first timeline dashboard with a calendar-first workspace: month grid, selected-day hourly view, drag/click range selection, and range-based free/busy or event creation.
+- Changed selected-day behavior so the hourly editor opens as an overlay only after clicking a day, closes on outside clicks, and switches directly when another day is clicked.
 
 ## Changed files so far
 - `.env.example`
@@ -263,6 +264,7 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Vercel runtime log reported `public.Timeline` did not exist; added an initial migration so production can create the database tables.
 - `git diff --check` passed after the calendar UI changes.
 - `which npm` still reports `npm not found` in this shell, so local lint/build could not be run here.
+- `git diff --check` passed after changing selected-day mechanics to an overlay.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
