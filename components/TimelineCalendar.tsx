@@ -141,12 +141,12 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
     setIsDayOpen(true);
   }
 
-  function startSelection(hour: number, pointerId?: number, target?: Element) {
+  function startSelection(hour: number, pointerId?: number, target?: Element, pointerType?: string) {
     setSelectionStart(hour);
     setSelectionEnd(hour);
     setIsDragging(true);
 
-    if (pointerId !== undefined && target instanceof HTMLElement) {
+    if (pointerId !== undefined && pointerType !== "mouse" && target instanceof HTMLElement) {
       target.setPointerCapture(pointerId);
     }
   }
@@ -271,7 +271,17 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
                         }
 
                         event.preventDefault();
-                        startSelection(hour, event.pointerId, event.currentTarget);
+                        startSelection(hour, event.pointerId, event.currentTarget, event.pointerType);
+                      }}
+                      onPointerMove={(event) => {
+                        if (isDragging && event.pointerType === "mouse") {
+                          setSelectionEnd(hour);
+                        }
+                      }}
+                      onMouseEnter={() => {
+                        if (isDragging) {
+                          setSelectionEnd(hour);
+                        }
                       }}
                       onClick={() => {
                         setSelectionStart(hour);

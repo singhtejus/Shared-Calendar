@@ -548,7 +548,14 @@ textarea:focus {
 }
 
 .hour-slot > span {
-  color: var(--muted);
+  align-self: stretch;
+  display: flex;
+  align-items: flex-start;
+  margin: -7px 0 -7px -9px;
+  border-right: 1px solid #c2cec7;
+  background: #d8e2dc;
+  padding: 7px 8px;
+  color: #263a31;
   font-size: 0.78rem;
   font-weight: 900;
   touch-action: pan-y;
@@ -594,12 +601,17 @@ textarea:focus {
   grid-template-columns: minmax(320px, 1fr) minmax(260px, 320px);
   gap: 12px;
   width: min(780px, calc(100% - 44px));
+  border: 1px solid #cad6cf;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px;
+  box-shadow: 0 28px 70px rgba(23, 33, 27, 0.26);
   transform: translateX(-50%);
 }
 
 .day-overlay .panel {
   padding: 16px;
-  box-shadow: 0 24px 60px rgba(23, 33, 27, 0.2);
+  box-shadow: none;
 }
 
 .day-overlay .day-panel-header {
@@ -790,12 +802,13 @@ textarea:focus {
 
   .day-overlay {
     position: fixed;
-    top: 86px;
+    top: 90px;
     left: 30px;
     right: 30px;
     width: auto;
-    max-height: calc(100dvh - 180px);
+    max-height: min(560px, calc(100dvh - 300px));
     overflow: auto;
+    padding: 8px;
     transform: none;
   }
 
@@ -805,6 +818,11 @@ textarea:focus {
 
   .hour-slot {
     min-height: 38px;
+    padding: 6px 8px;
+  }
+
+  .hour-slot > span {
+    margin: -6px 0 -6px -8px;
     padding: 6px 8px;
   }
 }

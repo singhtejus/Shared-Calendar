@@ -212,6 +212,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Changed selected-day behavior so the hourly editor opens as an overlay only after clicking a day, closes on outside clicks, and switches directly when another day is clicked.
 - Removed the selected-day overlay create-mode toggle, then added event creation back as a separate section below the Free/Busy range controls.
 - Condensed the selected-day overlay for desktop/mobile and changed touch selection so dragging the slot body selects time without pulling the panel, while the time-label column can still scroll hours.
+- Darkened the hourly time rail, made the selected-day overlay a single solid floating surface, and reduced its mobile max height to leave more click-out space.
+- Restored desktop drag selection by limiting pointer capture to touch/pen input and adding mouse movement/hover range updates across hour rows.
 
 ## Changed files so far
 - `.env.example`
@@ -269,6 +271,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `git diff --check` passed after changing selected-day mechanics to an overlay.
 - `git diff --check` passed after replacing the Free/busy vs Event toggle with separate availability and event creation sections.
 - `git diff --check` passed after compacting the overlay and improving touch time-range selection.
+- `git diff --check` passed after tightening the overlay visual treatment and mobile height.
+- `git diff --check` passed after restoring desktop hour-range drag behavior.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
