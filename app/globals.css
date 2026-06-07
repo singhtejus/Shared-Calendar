@@ -514,21 +514,26 @@ textarea:focus {
 }
 
 .hourly-grid {
-  max-height: min(58vh, 560px);
+  max-height: min(42vh, 360px);
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--line);
+  overscroll-behavior: contain;
+}
+
+.hourly-grid.selecting {
+  touch-action: none;
 }
 
 .hour-slot {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  gap: 10px;
-  min-height: 58px;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 8px;
+  min-height: 42px;
   border-bottom: 1px solid var(--line);
   background: #ffffff;
-  padding: 10px;
+  padding: 7px 9px;
   cursor: pointer;
   user-select: none;
 }
@@ -546,11 +551,14 @@ textarea:focus {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 900;
+  touch-action: pan-y;
 }
 
 .slot-items {
   display: grid;
   gap: 6px;
+  min-height: 24px;
+  touch-action: none;
 }
 
 .slot-items em,
@@ -579,28 +587,69 @@ textarea:focus {
 
 .day-overlay {
   position: absolute;
-  top: 86px;
+  top: 64px;
   left: 50%;
   z-index: 6;
   display: grid;
-  grid-template-columns: minmax(360px, 1fr) minmax(280px, 360px);
-  gap: 16px;
-  width: min(940px, calc(100% - 32px));
+  grid-template-columns: minmax(320px, 1fr) minmax(260px, 320px);
+  gap: 12px;
+  width: min(780px, calc(100% - 44px));
   transform: translateX(-50%);
 }
 
 .day-overlay .panel {
+  padding: 16px;
   box-shadow: 0 24px 60px rgba(23, 33, 27, 0.2);
+}
+
+.day-overlay .day-panel-header {
+  margin-bottom: 10px;
+}
+
+.day-overlay .day-panel-header h2,
+.day-overlay .selection-panel h2 {
+  font-size: 1.15rem;
+}
+
+.day-overlay .form-stack,
+.day-overlay .selection-panel,
+.day-overlay .create-section {
+  gap: 10px;
+}
+
+.day-overlay input,
+.day-overlay textarea {
+  padding: 9px 10px;
+}
+
+.day-overlay .segmented label {
+  padding: 9px;
+}
+
+.day-overlay button,
+.day-overlay .button {
+  min-height: 38px;
 }
 
 .selected-range-label {
   display: block;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   color: var(--primary);
+  font-size: 0.92rem;
 }
 
-.selection-panel > .segmented {
-  margin-top: -4px;
+.create-section {
+  display: grid;
+  gap: 12px;
+}
+
+.create-section + .create-section {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.create-section h3 {
+  margin-bottom: 0;
 }
 
 .day-summary {
@@ -741,16 +790,21 @@ textarea:focus {
 
   .day-overlay {
     position: fixed;
-    top: 80px;
-    left: 14px;
-    right: 14px;
+    top: 86px;
+    left: 30px;
+    right: 30px;
     width: auto;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100dvh - 180px);
     overflow: auto;
     transform: none;
   }
 
   .hourly-grid {
-    max-height: none;
+    max-height: 230px;
+  }
+
+  .hour-slot {
+    min-height: 38px;
+    padding: 6px 8px;
   }
 }

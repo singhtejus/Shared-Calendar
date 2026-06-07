@@ -17,6 +17,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { createAvailabilityAction } from "@/app/actions/availability";
+import { createEventAction } from "@/app/actions/events";
 
 type Member = {
   id: string;
@@ -85,6 +86,7 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
   const [isDragging, setIsDragging] = useState(false);
   const [isDayOpen, setIsDayOpen] = useState(false);
   const dayOverlayRef = useRef<HTMLDivElement>(null);
+  const hourlyGridRef = useRef<HTMLDivElement>(null);
 
   const monthDays = useMemo(() => {
     const first = startOfWeek(startOfMonth(visibleMonth));
@@ -110,6 +112,7 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
   const selectedDayBlocks = availabilityBlocks.filter((block) => isSameCalendarDay(block.startAt, selectedDay));
   const selectedDayEvents = events.filter((event) => isSameCalendarDay(event.startAt, selectedDay));
   const availabilityAction = createAvailabilityAction.bind(null, timelineId);
+  const eventAction = createEventAction.bind(null, timelineId);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -138,15 +141,25 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
     setIsDayOpen(true);
   }
 
-  function startSelection(hour: number) {
+  function startSelection(hour: number, pointerId?: number, target?: Element) {
     setSelectionStart(hour);
     setSelectionEnd(hour);
     setIsDragging(true);
+
+    if (pointerId !== undefined && target instanceof HTMLElement) {
+      target.setPointerCapture(pointerId);
+    }
   }
 
-  function continueSelection(hour: number) {
-    if (isDragging) {
-      setSelectionEnd(hour);
+  function continueSelectionFromPoint(clientX: number, clientY: number) {
+    if (!isDragging) return;
+
+    const target = document.elementFromPoint(clientX, clientY);
+    const slot = target?.closest("[data-hour-slot]");
+    const hour = slot?.getAttribute("data-hour");
+
+    if (hour !== null && hour !== undefined) {
+      setSelectionEnd(Number(hour));
     }
   }
 
@@ -223,7 +236,18 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
               </div>
               {selectedRange ? <strong className="selected-range-label">{selectedRange.label}</strong> : null}
 
-              <div className="hourly-grid">
+              <div
+                className={isDragging ? "hourly-grid selecting" : "hourly-grid"}
+                ref={hourlyGridRef}
+                onPointerMove={(event) => {
+                  if (isDragging) {
+                    event.preventDefault();
+                    continueSelectionFromPoint(event.clientX, event.clientY);
+                  }
+                }}
+                onPointerUp={endSelection}
+                onPointerCancel={endSelection}
+              >
                 {hours.map((hour) => {
                   const slotStart = dateFromHour(selectedDay, hour);
                   const slotEnd = dateFromHour(selectedDay, hour + 1);
@@ -239,8 +263,16 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
                       key={hour}
                       role="button"
                       tabIndex={0}
-                      onMouseDown={() => startSelection(hour)}
-                      onMouseEnter={() => continueSelection(hour)}
+                      data-hour-slot
+                      data-hour={hour}
+                      onPointerDown={(event) => {
+                        if (event.target instanceof Element && event.target.closest("[data-scroll-hours]")) {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        startSelection(hour, event.pointerId, event.currentTarget);
+                      }}
                       onClick={() => {
                         setSelectionStart(hour);
                         setSelectionEnd(hour);
@@ -253,7 +285,7 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
                         }
                       }}
                     >
-                      <span>{format(slotStart, "ha")}</span>
+                      <span data-scroll-hours>{format(slotStart, "ha")}</span>
                       <div className="slot-items">
                         {slotBlocks.map((block) => (
                           <em
@@ -288,27 +320,53 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
                 <h2>{selectedRange ? selectedRange.label : "Select a time range"}</h2>
               </div>
 
-              <form className="form-stack" action={availabilityAction}>
-                <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
-                <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
-                <div className="segmented">
+              <section className="create-section">
+                <h3>Availability</h3>
+                <form className="form-stack" action={availabilityAction}>
+                  <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
+                  <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
+                  <div className="segmented">
+                    <label>
+                      <input name="status" type="radio" value="FREE" defaultChecked />
+                      Free
+                    </label>
+                    <label>
+                      <input name="status" type="radio" value="BUSY" />
+                      Busy
+                    </label>
+                  </div>
                   <label>
-                    <input name="status" type="radio" value="FREE" defaultChecked />
-                    Free
+                    Note
+                    <input name="note" type="text" maxLength={160} />
+                  </label>
+                  <button type="submit" disabled={!selectedRange}>
+                    Add range
+                  </button>
+                </form>
+              </section>
+
+              <section className="create-section">
+                <h3>Event</h3>
+                <form className="form-stack" action={eventAction}>
+                  <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
+                  <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
+                  <label>
+                    Title
+                    <input name="title" type="text" required maxLength={120} />
                   </label>
                   <label>
-                    <input name="status" type="radio" value="BUSY" />
-                    Busy
+                    Location
+                    <input name="location" type="text" maxLength={200} />
                   </label>
-                </div>
-                <label>
-                  Note
-                  <input name="note" type="text" maxLength={160} />
-                </label>
-                <button type="submit" disabled={!selectedRange}>
-                  Add range
-                </button>
-              </form>
+                  <label>
+                    Description
+                    <textarea name="description" rows={3} maxLength={2000} />
+                  </label>
+                  <button type="submit" disabled={!selectedRange}>
+                    Add event
+                  </button>
+                </form>
+              </section>
 
               <div className="day-summary">
                 <h3>On this day</h3>
