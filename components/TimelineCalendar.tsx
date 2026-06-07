@@ -17,7 +17,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { createAvailabilityAction } from "@/app/actions/availability";
-import { createEventAction } from "@/app/actions/events";
 
 type Member = {
   id: string;
@@ -85,7 +84,6 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
   const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isDayOpen, setIsDayOpen] = useState(false);
-  const [mode, setMode] = useState<"availability" | "event">("availability");
   const dayOverlayRef = useRef<HTMLDivElement>(null);
 
   const monthDays = useMemo(() => {
@@ -112,7 +110,6 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
   const selectedDayBlocks = availabilityBlocks.filter((block) => isSameCalendarDay(block.startAt, selectedDay));
   const selectedDayEvents = events.filter((event) => isSameCalendarDay(event.startAt, selectedDay));
   const availabilityAction = createAvailabilityAction.bind(null, timelineId);
-  const eventAction = createEventAction.bind(null, timelineId);
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
@@ -291,70 +288,27 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
                 <h2>{selectedRange ? selectedRange.label : "Select a time range"}</h2>
               </div>
 
-              <div className="segmented">
+              <form className="form-stack" action={availabilityAction}>
+                <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
+                <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
+                <div className="segmented">
+                  <label>
+                    <input name="status" type="radio" value="FREE" defaultChecked />
+                    Free
+                  </label>
+                  <label>
+                    <input name="status" type="radio" value="BUSY" />
+                    Busy
+                  </label>
+                </div>
                 <label>
-                  <input
-                    type="radio"
-                    name="calendarMode"
-                    checked={mode === "availability"}
-                    onChange={() => setMode("availability")}
-                  />
-                  Free/busy
+                  Note
+                  <input name="note" type="text" maxLength={160} />
                 </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="calendarMode"
-                    checked={mode === "event"}
-                    onChange={() => setMode("event")}
-                  />
-                  Event
-                </label>
-              </div>
-
-              {mode === "availability" ? (
-                <form className="form-stack" action={availabilityAction}>
-                  <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
-                  <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
-                  <div className="segmented">
-                    <label>
-                      <input name="status" type="radio" value="FREE" defaultChecked />
-                      Free
-                    </label>
-                    <label>
-                      <input name="status" type="radio" value="BUSY" />
-                      Busy
-                    </label>
-                  </div>
-                  <label>
-                    Note
-                    <input name="note" type="text" maxLength={160} />
-                  </label>
-                  <button type="submit" disabled={!selectedRange}>
-                    Add range
-                  </button>
-                </form>
-              ) : (
-                <form className="form-stack" action={eventAction}>
-                  <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
-                  <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
-                  <label>
-                    Title
-                    <input name="title" type="text" required maxLength={120} />
-                  </label>
-                  <label>
-                    Location
-                    <input name="location" type="text" maxLength={200} />
-                  </label>
-                  <label>
-                    Description
-                    <textarea name="description" rows={4} maxLength={2000} />
-                  </label>
-                  <button type="submit" disabled={!selectedRange}>
-                    Create event
-                  </button>
-                </form>
-              )}
+                <button type="submit" disabled={!selectedRange}>
+                  Add range
+                </button>
+              </form>
 
               <div className="day-summary">
                 <h3>On this day</h3>
