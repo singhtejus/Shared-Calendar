@@ -1,6 +1,6 @@
 # Timeshare
 
-Timeshare is a Vercel-ready group calendar app for friend groups. A group creates one shared `Timeline`, members mark free or busy ranges, and everyone can create shared events. Members can subscribe only to the events they care about and optionally expose those subscriptions through a private ICS feed.
+Timeshare is a Vercel-ready group calendar app. A group creates one shared `Timeline`, members mark free or busy ranges, and everyone can create shared events. Members can subscribe only to the events they care about and optionally expose those subscriptions through a private ICS feed.
 
 ## Stack
 
@@ -8,7 +8,6 @@ Timeshare is a Vercel-ready group calendar app for friend groups. A group create
 - TypeScript
 - Prisma
 - PostgreSQL
-- bcryptjs
 - zod
 - date-fns
 - deterministic ICS generation
@@ -52,12 +51,12 @@ npm run dev
 3. Deploy the connected Git repository.
 4. Run Prisma migrations against the production database before using the app.
 
-The build script runs `prisma generate` before `next build`.
+The build script runs `prisma migrate deploy` and `prisma generate` before `next build`.
 
 ## Product Concepts
 
 - `Timeline`: one shared calendar instance for a group.
-- `Timeline password`: shared password used to join a timeline.
+- `Login name`: lightweight app identity used for joining timelines.
 - `Free/busy blocks`: large availability ranges marked by members.
 - `Events`: shared timeline events visible to all members.
 - `Subscriptions`: event creator is subscribed automatically; other members can subscribe or unsubscribe.

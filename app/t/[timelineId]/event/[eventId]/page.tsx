@@ -77,14 +77,14 @@ export default async function EventPage({ params }: EventPageProps) {
         ) : null}
         <div>
           <span>Created by</span>
-          <p>{event.createdBy.name ?? event.createdBy.email}</p>
+          <p>{event.createdBy.name ?? "Unknown member"}</p>
         </div>
         <div>
           <span>Subscribed</span>
           <p>
             {event.subscriptions.length > 0
               ? event.subscriptions
-                  .map((subscription) => subscription.user.name ?? subscription.user.email)
+                  .map((subscription) => subscription.user.name ?? "Unknown member")
                   .join(", ")
               : "No subscribers yet"}
           </p>

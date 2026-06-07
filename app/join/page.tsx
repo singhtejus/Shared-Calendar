@@ -17,7 +17,7 @@ export default async function JoinPage({ searchParams }: JoinPageProps) {
       <div className="page-heading">
         <p className="eyebrow">Existing timeline</p>
         <h1>Join a timeline</h1>
-        <p>Enter your email, display name, timeline id or slug, and the shared password.</p>
+        <p>Enter your login name and the timeline name.</p>
       </div>
       <JoinTimelineForm timeline={params.timeline} redirectTo={params.redirect} />
       <p className="helper-text">

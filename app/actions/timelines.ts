@@ -1,13 +1,16 @@
 "use server";
 
-import bcrypt from "bcryptjs";
 import { TimelineRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 import { colorsForMemberIndex } from "@/lib/colors";
 import { prisma } from "@/lib/prisma";
-import { setUserSession } from "@/lib/auth";
+import { requireTimelineMember, setUserSession } from "@/lib/auth";
 import { createTimelineSchema, formEntries, joinTimelineSchema } from "@/lib/validators";
+
+type TimelineActionState = {
+  error?: string;
+};
 
 function slugify(value: string) {
   return (
@@ -38,15 +41,36 @@ function safeRedirectPath(value: string | undefined, fallback: string) {
   return value;
 }
 
-export async function createTimelineAction(formData: FormData) {
+function userKeyFromLoginName(loginName: string) {
+  return `${slugify(loginName)}@timeshare.local`;
+}
+
+export async function createTimelineAction(
+  _state: TimelineActionState,
+  formData: FormData
+): Promise<TimelineActionState> {
   const parsed = createTimelineSchema.safeParse(formEntries(formData));
 
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Invalid timeline details.");
+    return { error: parsed.error.issues[0]?.message ?? "Invalid timeline details." };
   }
 
-  const { email, displayName, timelineName, password } = parsed.data;
-  const passwordHash = await bcrypt.hash(password, 12);
+  const { loginName, timelineName } = parsed.data;
+  const existingTimeline = await prisma.timeline.findFirst({
+    where: {
+      name: {
+        equals: timelineName,
+        mode: "insensitive"
+      }
+    },
+    select: { id: true }
+  });
+
+  if (existingTimeline) {
+    return { error: "A timeline with that name already exists. Pick a different name or join it." };
+  }
+
+  const email = userKeyFromLoginName(loginName);
   const slug = await uniqueSlug(timelineName);
   const colors = colorsForMemberIndex(0);
 
@@ -54,11 +78,11 @@ export async function createTimelineAction(formData: FormData) {
     const user = await tx.user.upsert({
       where: { email },
       update: {
-        name: displayName ?? undefined
+        name: loginName
       },
       create: {
         email,
-        name: displayName
+        name: loginName
       }
     });
 
@@ -66,7 +90,7 @@ export async function createTimelineAction(formData: FormData) {
       data: {
         name: timelineName,
         slug,
-        passwordHash,
+        passwordHash: "",
         createdById: user.id
       }
     });
@@ -76,7 +100,7 @@ export async function createTimelineAction(formData: FormData) {
         timelineId: timeline.id,
         userId: user.id,
         role: TimelineRole.OWNER,
-        displayName: displayName ?? user.name ?? email,
+        displayName: loginName,
         freeColor: colors.freeColor,
         busyColor: colors.busyColor
       }
@@ -89,38 +113,46 @@ export async function createTimelineAction(formData: FormData) {
   redirect(`/t/${result.timeline.id}`);
 }
 
-export async function joinTimelineAction(formData: FormData) {
+export async function joinTimelineAction(
+  _state: TimelineActionState,
+  formData: FormData
+): Promise<TimelineActionState> {
   const parsed = joinTimelineSchema.safeParse(formEntries(formData));
 
   if (!parsed.success) {
-    throw new Error(parsed.error.issues[0]?.message ?? "Invalid join details.");
+    return { error: parsed.error.issues[0]?.message ?? "Invalid join details." };
   }
 
-  const { email, displayName, timelineIdentifier, password, redirectTo } = parsed.data;
+  const { loginName, timelineName, redirectTo } = parsed.data;
   const timeline = await prisma.timeline.findFirst({
     where: {
-      OR: [{ id: timelineIdentifier }, { slug: timelineIdentifier.toLowerCase() }]
+      OR: [
+        { id: timelineName },
+        { slug: timelineName.toLowerCase() },
+        {
+          name: {
+            equals: timelineName,
+            mode: "insensitive"
+          }
+        }
+      ]
     }
   });
 
   if (!timeline) {
-    throw new Error("Timeline not found.");
+    return { error: "Timeline not found. Check the timeline name and try again." };
   }
 
-  const passwordMatches = await bcrypt.compare(password, timeline.passwordHash);
-  if (!passwordMatches) {
-    throw new Error("Timeline password is incorrect.");
-  }
-
+  const email = userKeyFromLoginName(loginName);
   const user = await prisma.$transaction(async (tx) => {
     const joinedUser = await tx.user.upsert({
       where: { email },
       update: {
-        name: displayName ?? undefined
+        name: loginName
       },
       create: {
         email,
-        name: displayName
+        name: loginName
       }
     });
 
@@ -134,10 +166,10 @@ export async function joinTimelineAction(formData: FormData) {
     });
 
     if (existingMember) {
-      if (displayName && displayName !== existingMember.displayName) {
+      if (loginName !== existingMember.displayName) {
         await tx.timelineMember.update({
           where: { id: existingMember.id },
-          data: { displayName }
+          data: { displayName: loginName }
         });
       }
 
@@ -153,7 +185,7 @@ export async function joinTimelineAction(formData: FormData) {
       data: {
         timelineId: timeline.id,
         userId: joinedUser.id,
-        displayName: displayName ?? joinedUser.name ?? email,
+        displayName: loginName,
         freeColor: colors.freeColor,
         busyColor: colors.busyColor
       }
@@ -164,4 +196,14 @@ export async function joinTimelineAction(formData: FormData) {
 
   await setUserSession(user.id);
   redirect(safeRedirectPath(redirectTo, `/t/${timeline.id}`));
+}
+
+export async function deleteTimelineAction(timelineId: string) {
+  await requireTimelineMember(timelineId);
+
+  await prisma.timeline.delete({
+    where: { id: timelineId }
+  });
+
+  redirect("/");
 }

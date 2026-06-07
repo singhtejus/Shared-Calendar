@@ -4,7 +4,7 @@
 This file is the required source of truth for all agents. Before editing code, read this file, identify the current incomplete step, inspect the existing repository, avoid repeating completed work, then update this file after implementation.
 
 ## Product definition
-Timeshare is a Vercel-deployed web app for group calendars. A `Timeline` is one shared calendar instance for a friend group or similar group. Users have global accounts identified by email and can belong to multiple timelines. A user creates a timeline with a shared timeline password. Other users join that timeline by entering their email, display name, timeline id or slug, and the shared password.
+Timeshare is a Vercel-deployed web app for group calendars. A `Timeline` is one shared calendar instance for a friend group or similar group. Users identify themselves with a lightweight login name and can belong to multiple timelines. A user creates a timeline with a timeline name. Other users join that timeline by entering their login name and the timeline name.
 
 Inside a timeline, each member can mark large free or busy ranges. Every member has two timeline-specific colors: a green shade for free ranges and a red shade for busy ranges. Timeline events are visible to all members. The event creator is subscribed by default. Other members can subscribe by opening the event. Users may optionally enable a personal timeline ICS feed. When enabled, that feed contains only timeline events the user subscribed to. When disabled, the old feed URL must stop working.
 
@@ -15,7 +15,6 @@ Events also support temporary share links. A share link should not expose event 
 - TypeScript
 - Prisma
 - PostgreSQL
-- bcryptjs for timeline password hashing
 - zod for validation
 - date-fns for display formatting
 - ics package or deterministic manual ICS generation
@@ -73,7 +72,7 @@ Implement these enums and models.
 Fields: id String cuid primary key; email String unique lowercase; name optional String; createdAt default now; updatedAt updatedAt. Relations: memberships, createdTimelines, createdEvents, eventSubscriptions.
 
 ### Timeline
-Fields: id String cuid primary key; name String; slug String unique; passwordHash String; createdById String; createdAt default now; updatedAt updatedAt. Relations: createdBy User; members; availabilityBlocks; events.
+Fields: id String cuid primary key; name String; slug String unique; passwordHash String retained as an internal legacy compatibility field; createdById String; createdAt default now; updatedAt updatedAt. Relations: createdBy User; members; availabilityBlocks; events.
 
 ### TimelineMember
 Fields: id String cuid primary key; timelineId String; userId String; role TimelineRole default MEMBER; displayName String; freeColor String; busyColor String; timelineFeedEnabled Boolean default false; timelineFeedToken optional String unique; createdAt default now; updatedAt updatedAt. Constraints: unique timelineId plus userId. Relations: timeline, user, availabilityBlocks.
@@ -91,7 +90,7 @@ Fields: id String cuid primary key; eventId String; userId String; createdAt def
 Fields: id String cuid primary key; eventId String; token String unique; expiresAt DateTime; createdById String; createdAt default now. Default expiration is 7 days.
 
 ## Auth and session behavior
-Initial auth is app-managed. User identity is email-only. On create or join, normalize email by trimming and lowercasing. Create the user if missing. Store a session cookie with the current user id. Cookie should be httpOnly, sameSite lax, path `/`, secure in production, and expire after 30 days.
+Initial auth is app-managed. User identity is a login name. On create or join, normalize the login name into the existing internal user key, create the user if missing, and store the login name as the displayed member name. Store a session cookie with the current user id. Cookie should be httpOnly, sameSite lax, path `/`, secure in production, and expire after 30 days.
 
 Implement `lib/auth.ts` helpers:
 - `getCurrentUser()` returns user or null.
@@ -107,9 +106,9 @@ Only timeline members can view timeline pages, create availability blocks, creat
 ## Routes
 `/`: Home page explaining timelines, free/busy ranges, shared events, and links to create or join.
 
-`/create`: Form with email, optional display name, timeline name, shared password. Server action creates user, timeline, owner membership, colors, session, then redirects to `/t/[timelineId]`.
+`/create`: Form with login name and timeline name. Server action creates user, timeline, owner membership, colors, session, then redirects to `/t/[timelineId]`.
 
-`/join`: Form with email, optional display name, timeline id or slug, shared password, optional safe redirect. Server action verifies shared password, creates membership if needed, sets session, redirects to requested safe path or timeline dashboard.
+`/join`: Form with login name, timeline name, and optional safe redirect. Server action creates membership if needed, sets session, redirects to requested safe path or timeline dashboard, and returns inline form errors instead of throwing for expected user mistakes.
 
 `/t/[timelineId]`: Protected timeline dashboard. Show timeline name, member legend, availability form, event form, calendar/list view, and feed settings.
 
@@ -124,7 +123,7 @@ Only timeline members can view timeline pages, create availability blocks, creat
 ## Server actions
 `auth.ts`: `logoutAction()`.
 
-`timelines.ts`: `createTimelineAction(formData)`, `joinTimelineAction(formData)`. Use zod validation, bcrypt password hashing/checking, color assignment, session cookie, and redirects.
+`timelines.ts`: `createTimelineAction(state, formData)`, `joinTimelineAction(state, formData)`. Use zod validation, color assignment, session cookie, inline form errors, and redirects.
 
 `availability.ts`: `createAvailabilityAction(timelineId, formData)`, optional `deleteAvailabilityAction(blockId)`. Require membership, validate fields, revalidate timeline path.
 
@@ -133,7 +132,7 @@ Only timeline members can view timeline pages, create availability blocks, creat
 `settings.ts`: `setTimelineFeedEnabledAction(timelineId, enabled)`. Require membership. Enabling creates a random URL-safe feed token if absent. Disabling clears the token and sets enabled false.
 
 ## Validation
-Implement in `lib/validators.ts`: email, create timeline, join timeline, availability, event schemas. Enforce: valid email; password min 6; timeline name 1-80; event title 1-120; description max 2000; location max 200; note max 160; start and end parse as valid dates; end after start.
+Implement in `lib/validators.ts`: login name, create timeline, join timeline, availability, event schemas. Enforce: login name required; timeline name 1-80; event title 1-120; description max 2000; location max 200; note max 160; start and end parse as valid dates; end after start.
 
 ## Color assignment
 Implement `colorsForMemberIndex(index)` in `lib/colors.ts`. Use at least 12 green hex colors and 12 red hex colors. Pick by `index % palette.length`, where index is the count of existing timeline members before creating the new one.
@@ -183,7 +182,7 @@ Document purpose, stack, setup, env vars, Prisma migration, Vercel deployment, t
 - Disabling feed invalidates the old URL.
 
 ## Out of scope for initial scaffold
-Email sending, OAuth login, Google Calendar API writes, Apple Calendar API writes, drag-select interactions, recurring events, reminders, timeline deletion, password reset, email verification, conflict detection, automatic scheduling suggestions.
+Email sending, OAuth login, Google Calendar API writes, Apple Calendar API writes, drag-select interactions, recurring events, reminders, password reset, email verification, conflict detection, automatic scheduling suggestions.
 
 ## Current incomplete step
 Step 11: Validate dependency install, Prisma generation/schema validation, and Next.js build in an environment with Node.js and npm available.
@@ -218,6 +217,8 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Added a `webcal://` personal feed subscribe button while keeping the HTTPS feed URL visible as a fallback.
 - Updated the public home page tagline to remove "for friends."
 - Added an animated opalescent lava-lamp-style background with subtle grain, reduced-motion handling, and translucent main surfaces.
+- Added member-authorized timeline deletion, relying on Prisma cascade deletes for timeline members, availability blocks, events, event subscriptions, and share links.
+- Added an inset app-frame border, reduced main content spacing, simplified create/join to login name plus timeline name, removed password checks from the user-facing flow, and added inline form errors for expected create/join failures.
 
 ## Changed files so far
 - `.env.example`
@@ -281,8 +282,12 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `git diff --check` passed after adding the webcal personal feed subscribe action.
 - `git diff --check` passed after updating the home page tagline.
 - `git diff --check` passed after adding the opalescent animated background.
+- `git diff --check` passed after adding member-authorized timeline deletion.
+- `which node` and `which npm` still report `not found` after timeline deletion, so local lint/build could not be run here.
+- `git diff --check` passed after the framed layout and login-name timeline access changes.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
 - Run `npm install`, `npm run prisma:generate`, `npm run prisma:migrate`, `npm run lint`, and `npm run build` locally when Node.js/npm are available.
 - Configure `DATABASE_URL` and `NEXT_PUBLIC_APP_URL` locally and in Vercel before production use.
+- TODO: Add a follow-up Prisma migration to replace the internal compatibility `User.email` and `Timeline.passwordHash` fields with first-class login-name/timeline-access fields, since the app no longer asks users for email or passwords.

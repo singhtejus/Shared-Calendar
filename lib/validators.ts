@@ -26,24 +26,14 @@ const dateField = z.preprocess(
   z.date().refine((date) => !Number.isNaN(date.getTime()), "Enter a valid date.")
 );
 
-export const emailSchema = z
-  .string()
-  .trim()
-  .email("Enter a valid email.")
-  .transform((email) => email.toLowerCase());
-
 export const createTimelineSchema = z.object({
-  email: emailSchema,
-  displayName: optionalText(80),
-  timelineName: requiredText(80, "Timeline name"),
-  password: z.string().min(6, "Password must be at least 6 characters.")
+  loginName: requiredText(80, "Login name"),
+  timelineName: requiredText(80, "Timeline name")
 });
 
 export const joinTimelineSchema = z.object({
-  email: emailSchema,
-  displayName: optionalText(80),
-  timelineIdentifier: requiredText(120, "Timeline"),
-  password: z.string().min(6, "Password must be at least 6 characters."),
+  loginName: requiredText(80, "Login name"),
+  timelineName: requiredText(120, "Timeline name"),
   redirectTo: optionalText(300)
 });
 

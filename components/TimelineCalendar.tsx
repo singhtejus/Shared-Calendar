@@ -227,7 +227,7 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
             <div className="day-panel panel">
               <div className="day-panel-header">
                 <div>
-                  <p className="eyebrow">Selected day</p>
+                  <p className="eyebrow">Drag to select hours</p>
                   <h2>{format(selectedDay, "EEEE, MMMM d")}</h2>
                 </div>
                 <button className="secondary-button" type="button" onClick={() => setIsDayOpen(false)}>
@@ -325,13 +325,8 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
             </div>
 
             <aside className="selection-panel panel">
-              <div>
-                <p className="eyebrow">Create</p>
-                <h2>{selectedRange ? selectedRange.label : "Select a time range"}</h2>
-              </div>
-
               <section className="create-section">
-                <h3>Availability</h3>
+                <h2>{selectedRange ? selectedRange.label : "Select a time range"}</h2>
                 <form className="form-stack" action={availabilityAction}>
                   <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
                   <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />
@@ -356,7 +351,7 @@ export function TimelineCalendar({ timelineId, availabilityBlocks, events }: Tim
               </section>
 
               <section className="create-section">
-                <h3>Event</h3>
+                <p className="eyebrow">Create event</p>
                 <form className="form-stack" action={eventAction}>
                   <input type="hidden" name="startAt" value={selectedRange ? inputValue(selectedRange.startAt) : ""} />
                   <input type="hidden" name="endAt" value={selectedRange ? inputValue(selectedRange.endAt) : ""} />

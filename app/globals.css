@@ -1,4 +1,5 @@
 :root {
+  --app-frame-gap: clamp(14px, 3vw, 42px);
   --bg: #eef6f2;
   --surface: rgba(255, 255, 255, 0.84);
   --surface-muted: rgba(232, 241, 237, 0.82);
@@ -21,10 +22,26 @@ html {
   background: #eef6f2;
 }
 
+html::before {
+  content: "";
+  position: fixed;
+  inset: var(--app-frame-gap);
+  z-index: 30;
+  pointer-events: none;
+  border: 1px solid rgba(79, 174, 184, 0.5);
+  border-radius: clamp(22px, 4vw, 42px);
+  box-shadow:
+    inset 0 0 20px rgba(72, 184, 194, 0.34),
+    inset 0 0 58px rgba(72, 184, 194, 0.28),
+    0 18px 45px rgba(23, 33, 27, 0.09);
+}
+
 body {
   position: relative;
   overflow-x: hidden;
   margin: 0;
+  min-height: 100%;
+  padding: var(--app-frame-gap);
   color: var(--text);
   background: transparent;
   font-family:
@@ -160,14 +177,15 @@ button:disabled {
 
 .app-header {
   position: sticky;
-  top: 0;
+  top: var(--app-frame-gap);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
+  border-radius: clamp(18px, 3.5vw, 34px) clamp(18px, 3.5vw, 34px) 0 0;
   background: rgba(247, 250, 248, 0.76);
-  padding: 16px clamp(18px, 4vw, 48px);
+  padding: 14px clamp(16px, 3vw, 34px);
   backdrop-filter: blur(16px);
 }
 
@@ -190,21 +208,21 @@ button:disabled {
 main {
   position: relative;
   z-index: 1;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - (var(--app-frame-gap) * 2) - 66px);
 }
 
 .page {
-  width: min(1120px, calc(100% - 36px));
+  width: min(1120px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 44px 0 72px;
+  padding: 34px 0 56px;
 }
 
 .narrow-page {
-  width: min(720px, calc(100% - 36px));
+  width: min(700px, calc(100% - 28px));
 }
 
 .hero-page {
-  width: min(1180px, calc(100% - 36px));
+  width: min(1180px, calc(100% - 28px));
 }
 
 .hero {
@@ -235,7 +253,7 @@ main {
 }
 
 .auth-home {
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - (var(--app-frame-gap) * 2) - 66px);
   display: grid;
   align-items: center;
 }
@@ -341,7 +359,7 @@ code {
 }
 
 .panel {
-  padding: 24px;
+  padding: 20px;
 }
 
 .form-stack {
@@ -371,6 +389,15 @@ input:focus,
 textarea:focus {
   border-color: var(--primary);
   outline: 3px solid rgba(21, 94, 99, 0.18);
+}
+
+.form-error {
+  border: 1px solid rgba(180, 35, 24, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 235, 232, 0.86);
+  padding: 10px 12px;
+  color: var(--danger);
+  font-weight: 800;
 }
 
 .segmented {
@@ -836,6 +863,27 @@ textarea:focus {
   gap: 12px;
 }
 
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-color: rgba(180, 35, 24, 0.36);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.danger-zone p {
+  margin-bottom: 0;
+}
+
+.danger-button {
+  background: var(--danger);
+}
+
+.danger-button:hover {
+  background: #8f1d14;
+}
+
 .share-links {
   display: grid;
   gap: 8px;
@@ -854,8 +902,8 @@ textarea:focus {
   }
 
   .page {
-    width: min(100% - 28px, 1120px);
-    padding-top: 30px;
+    width: 100%;
+    padding-top: 24px;
   }
 
   .hero {
@@ -870,6 +918,7 @@ textarea:focus {
   }
 
   .feed-settings,
+  .danger-zone,
   .availability-card,
   .event-card {
     align-items: stretch;

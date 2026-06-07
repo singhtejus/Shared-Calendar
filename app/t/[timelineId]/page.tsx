@@ -1,5 +1,6 @@
 import { FeedSettings } from "@/components/FeedSettings";
 import { TimelineCalendar } from "@/components/TimelineCalendar";
+import { deleteTimelineAction } from "@/app/actions/timelines";
 import { requireTimelineMember } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -12,6 +13,7 @@ type TimelinePageProps = {
 export default async function TimelinePage({ params }: TimelinePageProps) {
   const { timelineId } = await params;
   const { membership } = await requireTimelineMember(timelineId);
+  const deleteAction = deleteTimelineAction.bind(null, timelineId);
   const timeline = await prisma.timeline.findUniqueOrThrow({
     where: { id: timelineId },
     include: {
@@ -81,6 +83,22 @@ export default async function TimelinePage({ params }: TimelinePageProps) {
         enabled={membership.timelineFeedEnabled}
         token={membership.timelineFeedToken}
       />
+
+      <section className="panel danger-zone">
+        <div>
+          <p className="eyebrow">Danger zone</p>
+          <h2>Delete timeline</h2>
+          <p>
+            Deletes this timeline, members, availability, events, event subscriptions, and share
+            links.
+          </p>
+        </div>
+        <form action={deleteAction}>
+          <button className="danger-button" type="submit">
+            Delete timeline
+          </button>
+        </form>
+      </section>
     </div>
   );
 }

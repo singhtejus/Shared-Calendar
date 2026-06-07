@@ -7,8 +7,8 @@ export default function CreatePage() {
     <div className="page narrow-page">
       <div className="page-heading">
         <p className="eyebrow">New timeline</p>
-        <h1>Create a Timeshare timeline</h1>
-        <p>Set a shared password and invite your group with the timeline id or slug.</p>
+        <h1>Create a timeline</h1>
+        <p>Pick a timeline name and a login name to start planning.</p>
       </div>
       <CreateTimelineForm />
       <p className="helper-text">
