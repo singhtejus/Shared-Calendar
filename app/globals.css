@@ -1,7 +1,7 @@
 :root {
-  --bg: #f6f7f4;
-  --surface: #ffffff;
-  --surface-muted: #eef2ef;
+  --bg: #eef6f2;
+  --surface: rgba(255, 255, 255, 0.84);
+  --surface-muted: rgba(232, 241, 237, 0.82);
   --text: #17211b;
   --muted: #627069;
   --line: #dbe2dd;
@@ -18,16 +18,80 @@
 
 html {
   min-height: 100%;
-  background: var(--bg);
+  background: #eef6f2;
 }
 
 body {
+  position: relative;
+  overflow-x: hidden;
   margin: 0;
   color: var(--text);
-  background: var(--bg);
+  background: transparent;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+}
+
+body::before {
+  inset: -28%;
+  z-index: 0;
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 42%, rgba(226, 255, 246, 0.52)),
+    conic-gradient(
+      from 180deg at 48% 44%,
+      #d7fff5,
+      #e7ddff,
+      #fff2ca,
+      #d6efff,
+      #ffdff0,
+      #d7fff5
+    ),
+    linear-gradient(135deg, #e8f7f0 0%, #f8f0ff 48%, #fff8dd 100%);
+  background-size: 135% 135%, 150% 150%, 100% 100%;
+  filter: saturate(1.12) blur(22px);
+  opacity: 0.88;
+  transform-origin: 48% 52%;
+  animation: opal-flow 18s ease-in-out infinite alternate;
+}
+
+body::after {
+  inset: 0;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+  mix-blend-mode: soft-light;
+  opacity: 0.2;
+}
+
+@keyframes opal-flow {
+  0% {
+    background-position: 0% 48%, 35% 45%, center;
+    transform: scale(1) rotate(0deg);
+  }
+
+  50% {
+    background-position: 55% 52%, 62% 58%, center;
+    transform: scale(1.045) rotate(5deg);
+  }
+
+  100% {
+    background-position: 100% 46%, 42% 65%, center;
+    transform: scale(1.08) rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    transform: none;
+  }
 }
 
 a {
@@ -71,7 +135,7 @@ button:disabled {
 .secondary,
 .secondary-button {
   border: 1px solid var(--line);
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.72);
   color: var(--primary);
 }
 
@@ -102,7 +166,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
-  background: rgba(246, 247, 244, 0.92);
+  background: rgba(247, 250, 248, 0.76);
   padding: 16px clamp(18px, 4vw, 48px);
   backdrop-filter: blur(16px);
 }
@@ -124,6 +188,8 @@ button:disabled {
 }
 
 main {
+  position: relative;
+  z-index: 1;
   min-height: calc(100vh - 70px);
 }
 
@@ -254,6 +320,7 @@ code {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
+  backdrop-filter: blur(18px) saturate(1.08);
   box-shadow: var(--shadow);
 }
 
@@ -294,7 +361,7 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.88);
   color: var(--text);
   font: inherit;
   padding: 12px 13px;
@@ -356,7 +423,7 @@ textarea:focus {
   gap: 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.72);
   padding: 10px;
   font-weight: 800;
 }
@@ -393,6 +460,13 @@ textarea:focus {
   display: grid;
   gap: 12px;
   justify-items: end;
+}
+
+.feed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .calendar-grid {
@@ -464,7 +538,7 @@ textarea:focus {
   justify-content: space-between;
   border-radius: 0;
   padding: 10px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.72);
   color: var(--text);
   text-align: left;
 }
@@ -514,7 +588,7 @@ textarea:focus {
 }
 
 .hourly-grid {
-  max-height: min(42vh, 360px);
+  max-height: 300px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -528,12 +602,12 @@ textarea:focus {
 
 .hour-slot {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr);
-  gap: 8px;
-  min-height: 42px;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 7px;
+  min-height: 34px;
   border-bottom: 1px solid var(--line);
-  background: #ffffff;
-  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 8px;
   cursor: pointer;
   user-select: none;
 }
@@ -551,10 +625,10 @@ textarea:focus {
   align-self: stretch;
   display: flex;
   align-items: flex-start;
-  margin: -7px 0 -7px -9px;
+  margin: -5px 0 -5px -8px;
   border-right: 1px solid #c2cec7;
   background: #d8e2dc;
-  padding: 7px 8px;
+  padding: 5px 7px;
   color: #263a31;
   font-size: 0.78rem;
   font-weight: 900;
@@ -563,8 +637,8 @@ textarea:focus {
 
 .slot-items {
   display: grid;
-  gap: 6px;
-  min-height: 24px;
+  gap: 4px;
+  min-height: 20px;
   touch-action: none;
 }
 
@@ -594,70 +668,70 @@ textarea:focus {
 
 .day-overlay {
   position: absolute;
-  top: 64px;
+  top: 54px;
   left: 50%;
   z-index: 6;
   display: grid;
-  grid-template-columns: minmax(320px, 1fr) minmax(260px, 320px);
-  gap: 12px;
-  width: min(780px, calc(100% - 44px));
+  grid-template-columns: minmax(320px, 1fr) minmax(250px, 300px);
+  gap: 10px;
+  width: min(720px, calc(100% - 64px));
   border: 1px solid #cad6cf;
   border-radius: 10px;
   background: #ffffff;
-  padding: 10px;
+  padding: 8px;
   box-shadow: 0 28px 70px rgba(23, 33, 27, 0.26);
   transform: translateX(-50%);
 }
 
 .day-overlay .panel {
-  padding: 16px;
+  padding: 12px;
   box-shadow: none;
 }
 
 .day-overlay .day-panel-header {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .day-overlay .day-panel-header h2,
 .day-overlay .selection-panel h2 {
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 
 .day-overlay .form-stack,
 .day-overlay .selection-panel,
 .day-overlay .create-section {
-  gap: 10px;
+  gap: 8px;
 }
 
 .day-overlay input,
 .day-overlay textarea {
-  padding: 9px 10px;
+  padding: 7px 9px;
 }
 
 .day-overlay .segmented label {
-  padding: 9px;
+  padding: 7px 8px;
 }
 
 .day-overlay button,
 .day-overlay .button {
-  min-height: 38px;
+  min-height: 34px;
 }
 
 .selected-range-label {
   display: block;
   margin-bottom: 10px;
   color: var(--primary);
-  font-size: 0.92rem;
+  font-size: 0.86rem;
 }
 
 .create-section {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .create-section + .create-section {
   border-top: 1px solid var(--line);
-  padding-top: 14px;
+  padding-top: 10px;
 }
 
 .create-section h3 {
@@ -666,9 +740,9 @@ textarea:focus {
 
 .day-summary {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 10px;
 }
 
 .day-summary h3,
@@ -679,6 +753,17 @@ textarea:focus {
 .day-summary p {
   color: var(--text);
   font-size: 0.92rem;
+}
+
+@media (min-width: 761px) {
+  .day-overlay .selection-panel {
+    max-height: 420px;
+    overflow: auto;
+  }
+
+  .day-overlay textarea {
+    min-height: 72px;
+  }
 }
 
 .day-group {
@@ -699,7 +784,7 @@ textarea:focus {
   border-left: 5px solid var(--primary);
   border-radius: 8px;
   padding: 14px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .availability-card p,
@@ -793,6 +878,17 @@ textarea:focus {
 
   .feed-url {
     justify-items: stretch;
+  }
+
+  .feed-actions {
+    justify-content: stretch;
+  }
+
+  .feed-actions > *,
+  .feed-actions form,
+  .feed-actions button,
+  .feed-actions .button {
+    width: 100%;
   }
 
   .month-cell {

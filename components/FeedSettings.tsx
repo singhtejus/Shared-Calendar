@@ -11,6 +11,7 @@ export function FeedSettings({ timelineId, enabled, token }: FeedSettingsProps) 
   const enableAction = setTimelineFeedEnabledAction.bind(null, timelineId, true);
   const disableAction = setTimelineFeedEnabledAction.bind(null, timelineId, false);
   const feedUrl = enabled && token ? `${getAppUrl()}/api/feed/${token}` : null;
+  const webcalUrl = feedUrl?.replace(/^https?:\/\//, "webcal://");
 
   return (
     <section className="panel feed-settings">
@@ -21,11 +22,18 @@ export function FeedSettings({ timelineId, enabled, token }: FeedSettingsProps) 
       {feedUrl ? (
         <div className="feed-url">
           <code>{feedUrl}</code>
-          <form action={disableAction}>
-            <button className="secondary-button" type="submit">
-              Disable feed
-            </button>
-          </form>
+          <div className="feed-actions">
+            {webcalUrl ? (
+              <a className="button" href={webcalUrl}>
+                Subscribe in Calendar
+              </a>
+            ) : null}
+            <form action={disableAction}>
+              <button className="secondary-button" type="submit">
+                Disable feed
+              </button>
+            </form>
+          </div>
         </div>
       ) : (
         <form action={enableAction}>

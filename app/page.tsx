@@ -23,7 +23,7 @@ export default async function HomePage() {
     <div className="page auth-home">
       <section className="simple-intro">
         <h1>Timeshare</h1>
-        <p className="lede">A shared calendar for friends.</p>
+        <p className="lede">A shared calendar.</p>
         <p>
           Create one timeline for a group, collect free and busy ranges, plan events, and let each
           member subscribe only to the events they care about.

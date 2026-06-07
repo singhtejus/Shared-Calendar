@@ -214,6 +214,10 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - Condensed the selected-day overlay for desktop/mobile and changed touch selection so dragging the slot body selects time without pulling the panel, while the time-label column can still scroll hours.
 - Darkened the hourly time rail, made the selected-day overlay a single solid floating surface, and reduced its mobile max height to leave more click-out space.
 - Restored desktop drag selection by limiting pointer capture to touch/pen input and adding mouse movement/hover range updates across hour rows.
+- Compressed the desktop selected-day overlay with shorter hour rows, smaller form controls, narrower panel width, and an internal scroll for the create column.
+- Added a `webcal://` personal feed subscribe button while keeping the HTTPS feed URL visible as a fallback.
+- Updated the public home page tagline to remove "for friends."
+- Added an animated opalescent lava-lamp-style background with subtle grain, reduced-motion handling, and translucent main surfaces.
 
 ## Changed files so far
 - `.env.example`
@@ -273,6 +277,10 @@ Step 11: Validate dependency install, Prisma generation/schema validation, and N
 - `git diff --check` passed after compacting the overlay and improving touch time-range selection.
 - `git diff --check` passed after tightening the overlay visual treatment and mobile height.
 - `git diff --check` passed after restoring desktop hour-range drag behavior.
+- `git diff --check` passed after compressing the selected-day overlay for desktop.
+- `git diff --check` passed after adding the webcal personal feed subscribe action.
+- `git diff --check` passed after updating the home page tagline.
+- `git diff --check` passed after adding the opalescent animated background.
 
 ## Remaining issues
 - Install Node.js/npm or use an environment where they are available.
