@@ -10,6 +10,7 @@
   --accent: #8a4f12;
   --danger: #b42318;
   --shadow: 0 12px 32px rgba(23, 33, 27, 0.08);
+  --page-gutter: clamp(20px, 5vw, 56px);
 }
 
 * { box-sizing: border-box; }
@@ -29,11 +30,7 @@ body {
 
 body::before,
 body::after { content: ""; position: fixed; pointer-events: none; }
-body::before {
-  inset: -28%; z-index: 0;
-  background: linear-gradient(118deg, rgba(255,255,255,.72), rgba(255,255,255,0) 42%, rgba(226,255,246,.52)), conic-gradient(from 180deg at 48% 44%, #d7fff5, #e7ddff, #fff2ca, #d6efff, #ffdff0, #d7fff5), linear-gradient(135deg,#e8f7f0 0%,#f8f0ff 48%,#fff8dd 100%);
-  background-size: 135% 135%,150% 150%,100% 100%; filter: saturate(1.12) blur(22px); opacity: .88; transform-origin: 48% 52%; animation: opal-flow 18s ease-in-out infinite alternate;
-}
+body::before { inset: -28%; z-index: 0; background: linear-gradient(118deg, rgba(255,255,255,.72), rgba(255,255,255,0) 42%, rgba(226,255,246,.52)), conic-gradient(from 180deg at 48% 44%, #d7fff5, #e7ddff, #fff2ca, #d6efff, #ffdff0, #d7fff5), linear-gradient(135deg,#e8f7f0 0%,#f8f0ff 48%,#fff8dd 100%); background-size: 135% 135%,150% 150%,100% 100%; filter: saturate(1.12) blur(22px); opacity: .88; transform-origin: 48% 52%; animation: opal-flow 18s ease-in-out infinite alternate; }
 body::after { inset: 0; z-index: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); background-size: 150px 150px; mix-blend-mode: soft-light; opacity: .2; }
 
 @keyframes opal-flow { 0% { background-position: 0% 48%,35% 45%,center; transform: scale(1) rotate(0deg); } 50% { background-position: 55% 52%,62% 58%,center; transform: scale(1.045) rotate(5deg); } 100% { background-position: 100% 46%,42% 65%,center; transform: scale(1.08) rotate(-4deg); } }
@@ -49,14 +46,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .link-button { min-height: auto; border: 0; padding: 0; background: transparent; color: var(--primary); font-weight: 700; }
 .link-button:hover { background: transparent; text-decoration: underline; }
 
-.app-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: rgba(247,250,248,.76); padding: 14px clamp(16px,3vw,34px); backdrop-filter: blur(16px); }
+.app-header { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); background: rgba(247,250,248,.76); padding: 14px var(--page-gutter); backdrop-filter: blur(16px); }
 .brand { color: var(--text); font-size: 1.1rem; font-weight: 900; }
 .nav { display: flex; align-items: center; gap: 18px; }
 .nav form { display: contents; }
 main { position: relative; z-index: 1; min-height: calc(100vh - 66px); }
-.page { width: min(1120px, calc(100% - 28px)); margin: 0 auto; padding: 34px 0 56px; }
-.narrow-page { width: min(700px, calc(100% - 28px)); }
-.hero-page { width: min(1180px, calc(100% - 28px)); }
+.page { width: min(1120px, calc(100% - (var(--page-gutter) * 2))); margin: 0 auto; padding: 34px 0 56px; }
+.narrow-page { width: min(700px, calc(100% - (var(--page-gutter) * 2))); }
+.hero-page { width: min(1180px, calc(100% - (var(--page-gutter) * 2))); }
 .hero { min-height: 520px; display: grid; align-items: center; border-bottom: 1px solid var(--line); background: linear-gradient(90deg, rgba(246,247,244,.92), rgba(246,247,244,.72)), repeating-linear-gradient(90deg, transparent 0, transparent 74px, rgba(21,94,99,.14) 74px, rgba(21,94,99,.14) 76px), repeating-linear-gradient(0deg,#edf2ee 0,#edf2ee 58px,#fff 58px,#fff 116px); }
 .auth-home { min-height: calc(100vh - 66px); display: grid; align-items: center; }
 .simple-intro { width: min(680px,100%); padding: 54px 0; }
@@ -157,4 +154,4 @@ input:focus,textarea:focus { border-color: var(--primary); outline: 3px solid rg
 .danger-button { background: var(--danger); }
 .danger-button:hover { background: #8f1d14; }
 .share-links { display: grid; gap: 8px; }
-@media (max-width: 760px) { .app-header { align-items: flex-start; gap: 12px; } .nav { flex-wrap: wrap; justify-content: flex-end; gap: 12px; } .page { width: 100%; padding-top: 24px; } .hero { min-height: 460px; } .feature-grid,.dashboard-header,.two-column,.day-overlay { grid-template-columns: 1fr; } .feed-settings,.danger-zone,.availability-card,.event-card { align-items: stretch; flex-direction: column; } .feed-url { justify-items: stretch; } .feed-actions { justify-content: stretch; } .feed-actions > *,.feed-actions form,.feed-actions button,.feed-actions .button { width: 100%; } .month-cell { min-height: 74px; padding: 8px; } .day-overlay { position: fixed; top: 90px; left: 30px; right: 30px; width: auto; max-height: min(560px, calc(100dvh - 300px)); overflow: auto; padding: 8px; transform: none; } .hourly-grid { max-height: 230px; } .hour-slot { min-height: 38px; padding: 6px 8px; } .hour-slot > span { margin: -6px 0 -6px -8px; padding: 6px 8px; } }
+@media (max-width: 760px) { :root { --page-gutter: 30px; } .app-header { align-items: flex-start; gap: 12px; } .nav { flex-wrap: wrap; justify-content: flex-end; gap: 12px; } .page { width: calc(100% - (var(--page-gutter) * 2)); padding-top: 24px; } .hero { min-height: 460px; } .feature-grid,.dashboard-header,.two-column,.day-overlay { grid-template-columns: 1fr; } .feed-settings,.danger-zone,.availability-card,.event-card { align-items: stretch; flex-direction: column; } .feed-url { justify-items: stretch; } .feed-actions { justify-content: stretch; } .feed-actions > *,.feed-actions form,.feed-actions button,.feed-actions .button { width: 100%; } .month-cell { min-height: 74px; padding: 8px; } .day-overlay { position: fixed; top: 90px; left: 30px; right: 30px; width: auto; max-height: min(560px, calc(100dvh - 300px)); overflow: auto; padding: 8px; transform: none; } .hourly-grid { max-height: 230px; } .hour-slot { min-height: 38px; padding: 6px 8px; } .hour-slot > span { margin: -6px 0 -6px -8px; padding: 6px 8px; } }
